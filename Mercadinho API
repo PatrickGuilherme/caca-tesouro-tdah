@@ -1,0 +1,10 @@
+MercadinhoAPI/
+├── Controllers/
+│   └── JogoController.cs
+├── Models/
+│   ├── Item.cs
+│   └── Cliente.cs
+├── Services/
+│   └── JogoService.cs
+├── Program.cs
+└── MercadinhoAPI.csproj
