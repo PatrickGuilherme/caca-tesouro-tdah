@@ -1,0 +1,51 @@
+using Microsoft.AspNetCore.Mvc;
+using MercadinhoAPI.Models;
+using MercadinhoAPI.Services;
+
+namespace MercadinhoAPI.Controllers
+{
+    [ApiController]
+    [Route("api/[controller]")]
+    public class JogoController : ControllerBase
+    {
+        private readonly JogoService _service;
+
+        public JogoController(JogoService service)
+        {
+            _service = service;
+        }
+
+        /// <summary>
+        /// Gera um novo cliente com itens e valor pago
+        /// </summary>
+        [HttpGet("novo-cliente")]
+        public ActionResult<Cliente> NovoCliente()
+        {
+            var cliente = _service.GerarCliente();
+            return Ok(cliente);
+        }
+
+        /// <summary>
+        /// Recebe o troco calculado pelo jogador e retorna o resultado
+        /// </summary>
+        [HttpPost("verificar-troco")]
+        public ActionResult<object> VerificarTroco([FromBody] VerificacaoRequest req)
+        {
+            var cliente = req.Cliente;
+            var resultado = _service.VerificarTroco(cliente, req.RespostaJogador);
+
+            return Ok(new
+            {
+                correto = resultado.correto,
+                trocoCorreto = resultado.trocoCorreto,
+                pontuacao = resultado.pontuacao
+            });
+        }
+    }
+
+    public class VerificacaoRequest
+    {
+        public Cliente Cliente { get; set; }
+        public decimal RespostaJogador { get; set; }
+    }
+}
