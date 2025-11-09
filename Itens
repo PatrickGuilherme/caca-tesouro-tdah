@@ -1,8 +1,0 @@
-namespace MercadinhoAPI.Models
-{
-    public class Item
-    {
-        public string Nome { get; set; }
-        public decimal Preco { get; set; }
-    }
-}
