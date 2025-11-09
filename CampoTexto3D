@@ -1,0 +1,79 @@
+using Godot;
+using System;
+
+public partial class CampoTexto3D : Node3D
+{
+    private Label3D labelTexto;
+    private CollisionShape3D areaClique;
+    private bool ativo = false;
+    private string texto = "";
+    private Mercadinho mercadinho;
+
+    public override void _Ready()
+    {
+        labelTexto = GetNode<Label3D>("Label3D");
+        areaClique = GetNode<CollisionShape3D>("CollisionShape3D");
+
+        // Encontra o nó principal do jogo
+        mercadinho = GetTree().Root.GetNodeOrNull<Mercadinho>("Node3D/Mercadinho");
+
+        AtualizarTexto();
+    }
+
+    public override void _Input(InputEvent @event)
+    {
+        // Clique do mouse ativa/desativa o campo de texto
+        if (@event is InputEventMouseButton mouseEvent && mouseEvent.Pressed)
+        {
+            var camera = GetViewport().GetCamera3D();
+            if (camera == null)
+                return;
+
+            var from = camera.ProjectRayOrigin(mouseEvent.Position);
+            var to = from + camera.ProjectRayNormal(mouseEvent.Position) * 1000;
+
+            // Usa PhysicsRayQueryParameters3D (Godot 4)
+            var query = PhysicsRayQueryParameters3D.Create(from, to);
+            var result = GetWorld3D().DirectSpaceState.IntersectRay(query);
+
+            if (result.Count > 0)
+            {
+                // Converte o "collider" (Variant) em Node
+                var collider = result["collider"].As<Node>();
+                if (collider == areaClique)
+                {
+                    ativo = true;
+                    GD.Print("Campo de texto ativado!");
+                }
+                else
+                    ativo = false;
+            }
+        }
+
+        // Captura o texto digitado quando o campo estiver ativo
+        if (ativo && @event is InputEventKey keyEvent && keyEvent.Pressed)
+        {
+            if (keyEvent.Keycode == Key.Backspace && texto.Length > 0)
+            {
+                texto = texto[..^1];
+            }
+            else if (keyEvent.Keycode == Key.Enter)
+            {
+                ativo = false;
+                GD.Print($"Texto final: {texto}");
+                mercadinho?.ValidarTroco(texto);
+            }
+            else if (!keyEvent.Echo && keyEvent.Unicode > 31)
+            {
+                texto += (char)keyEvent.Unicode;
+            }
+
+            AtualizarTexto();
+        }
+    }
+
+    private void AtualizarTexto()
+    {
+        labelTexto.Text = texto.Length > 0 ? texto : "[Clique para digitar]";
+    }
+}
