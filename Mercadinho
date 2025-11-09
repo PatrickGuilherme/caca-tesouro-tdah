@@ -1,0 +1,77 @@
+using Godot;
+using System;
+
+public partial class Mercadinho : Node3D
+{
+    private float totalCompra;
+    private float valorPago;
+    private float trocoCorreto;
+
+    [Export] public NodePath campoTextoPath;
+    private CampoTexto3D campoTexto;
+
+    public override void _Ready()
+    {
+        if (campoTextoPath != null)
+            campoTexto = GetNode<CampoTexto3D>(campoTextoPath);
+
+        GerarNovaCompra();
+    }
+
+    private void GerarNovaCompra()
+    {
+        totalCompra = (float)Math.Round(GD.RandRange(5.0, 50.0), 2);
+        valorPago = (float)Math.Round(GD.RandRange(totalCompra, totalCompra + 20.0), 2);
+        trocoCorreto = (float)Math.Round(valorPago - totalCompra, 2);
+
+        GD.Print($"Nova compra -> Total: {totalCompra:F2} | Pago: {valorPago:F2} | Troco: {trocoCorreto:F2}");
+        campoTexto?.LimparCampo();
+    }
+
+    public void ValidarTroco(string respostaTexto)
+    {
+        if (float.TryParse(respostaTexto, out float trocoDigitado))
+        {
+            if (Math.Abs(trocoDigitado - trocoCorreto) < 0.01f)
+            {
+                GD.Print("✅ Troco correto! Ótimo trabalho!");
+                FeedbackVisual(true);
+            }
+            else
+            {
+                GD.Print($"❌ Troco incorreto! O certo era {trocoCorreto:F2}");
+                FeedbackVisual(false);
+            }
+
+            GerarNovaCompra();
+        }
+        else
+        {
+            GD.Print("⚠️ Digite um número válido!");
+        }
+    }
+
+    private void FeedbackVisual(bool acerto)
+    {
+        if (campoTexto == null) return;
+
+        var label = campoTexto.GetNode<Label3D>("Label3D");
+        label.Modulate = acerto ? new Color(0, 1, 0) : new Color(1, 0, 0); // verde/vermelho
+        GetTree().CreateTimer(0.5f).Timeout += () =>
+        {
+            label.Modulate = new Color(1, 1, 1);
+        };
+    }
+
+    private void AtualizarTexto()
+    {
+    labelTexto.Text = texto.Length > 0 ? texto : "[Clique para digitar]";
+    }
+
+    public void LimparCampo()
+    {
+    texto = "";
+    AtualizarTexto();
+    }
+
+}
